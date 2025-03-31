@@ -135,13 +135,13 @@ TextureImporter:
       edges: []
       weights: []
     - serializedVersion: 2
-      name: Tree
+      name: Tree_left
       rect:
         serializedVersion: 2
         x: 66
         y: 192
-        width: 60
-        height: 48
+        width: 30
+        height: 49
       alignment: 9
       pivot: {x: 0.5, y: 0.16666667}
       border: {x: 0, y: 0, z: 0, w: 0}
@@ -197,6 +197,27 @@ TextureImporter:
       indices: 
       edges: []
       weights: []
+    - serializedVersion: 2
+      name: Tree_right
+      rect:
+        serializedVersion: 2
+        x: 96
+        y: 192
+        width: 30
+        height: 49
+      alignment: 9
+      pivot: {x: 0.5, y: 0.1632653}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 729805764f97c5e488d7665c61cb3786
+      internalID: -797167527
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
     outline: []
     physicsShape: []
     bones: []
@@ -212,7 +233,8 @@ TextureImporter:
       Door Open: 1915437353
       Street Light _ 1: -1598993491
       Street Light _ 2: -1068027949
-      Tree: 1020496151
+      Tree_left: 1020496151
+      Tree_right: -797167527
   spritePackingTag: 
   pSDRemoveMatte: 0
   pSDShowRemoveMatteOption: 0
