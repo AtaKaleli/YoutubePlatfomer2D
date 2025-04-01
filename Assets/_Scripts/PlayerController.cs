@@ -11,6 +11,7 @@ public class PlayerController : MonoBehaviour
     [SerializeField] private int maxJumpAmount = 2; // means player can do double jump
     [SerializeField] private float wallSlideSpeedDivider = 0.1f;
     [SerializeField] private float variableJumpDivider = 0.5f;
+    [SerializeField] private float wallSlideCancelForce = 2f;
 
     [Header("Ground Collision Check")]
     [SerializeField] private Transform groundCheck;
@@ -23,23 +24,40 @@ public class PlayerController : MonoBehaviour
     [SerializeField] private Transform wallCheck;
     [SerializeField] private float wallCheckRadius;
 
+    [SerializeField] private Vector2 wallJumpDirection;
+
 
     private float horizontalDirection;
     private bool isFacingRight = true;
+    private int facingDirection = 1;
+
     private bool isWalking;
     private bool isGrounded;
+
     private bool canJump;
     private int currentJumpAmount;
+
     private bool isWallDetected;
     private bool isWallSliding;
+    private bool canWallSlide = true;
+
+    private float wallJumpForce;
+
+
+
+
+
+    private void Awake()
+    {
+        rb = GetComponent<Rigidbody2D>();
+        anim = GetComponent<Animator>();
+    }
 
 
     private void Start()
     {
-        rb = GetComponent<Rigidbody2D>();
-        anim = GetComponent<Animator>();
-
         currentJumpAmount = maxJumpAmount;
+        wallJumpDirection.Normalize();
     }
 
 
@@ -72,6 +90,16 @@ public class PlayerController : MonoBehaviour
         {
             CancelJump();
         }
+
+        if(isWallSliding && Input.GetKey(KeyCode.S))
+        {
+            CancelWallSlide();
+        }
+
+        if (isWallSliding && Input.GetKeyUp(KeyCode.S))
+        {
+            canWallSlide = true;
+        }
     }
 
     
@@ -95,9 +123,13 @@ public class PlayerController : MonoBehaviour
     private void HandleMovement()
     {
 
-        if (isWallSliding)
+        if (isWallSliding && canWallSlide)
         {
             rb.velocity = new Vector2(0, rb.velocity.y * wallSlideSpeedDivider);
+        }
+        else if(isWallSliding && !canWallSlide)
+        {
+            rb.velocity = new Vector2(0, rb.velocity.y * (wallSlideSpeedDivider * 8.5f));
         }
 
 
@@ -126,6 +158,7 @@ public class PlayerController : MonoBehaviour
             return;
 
         isFacingRight = !isFacingRight;
+        facingDirection *= -1;
         transform.Rotate(0f, 180f, 0f);
     }
 
@@ -161,6 +194,14 @@ public class PlayerController : MonoBehaviour
         isWallSliding = isWallDetected && !isGrounded && rb.velocity.y < 0.01f;
     }
 
+    private void CancelWallSlide()
+    {
+        canWallSlide = false;
+    }
+
+
+
+
     #region Gizmos Drawings
     private void OnDrawGizmos()
     {
@@ -168,7 +209,7 @@ public class PlayerController : MonoBehaviour
         //WallCheckColorChange();
 
         Gizmos.DrawWireSphere(groundCheck.position, groundRadius);
-        Gizmos.DrawLine(wallCheck.position, new Vector2(wallCheck.position.x + (horizontalDirection * wallCheckRadius), wallCheck.position.y));
+        Gizmos.DrawLine(wallCheck.position, new Vector2(wallCheck.position.x + (facingDirection * wallCheckRadius), wallCheck.position.y));
     }
 
     private void GroundCheckColorChange()
@@ -195,4 +236,11 @@ public class PlayerController : MonoBehaviour
         }
     }
     #endregion
+
+
+
+
+
+
+
 }
