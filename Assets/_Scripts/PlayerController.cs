@@ -9,14 +9,20 @@ public class PlayerController : MonoBehaviour
     [SerializeField] private float movementSpeed = 5f;
     [SerializeField] private float jumpForce = 15f;
     [SerializeField] private int maxJumpAmount = 2; // means player can do double jump
-
+    [SerializeField] private float wallSlideSpeedDivider = 0.1f;
+    [SerializeField] private float variableJumpDivider = 0.5f;
 
     [Header("Ground Collision Check")]
     [SerializeField] private Transform groundCheck;
     [SerializeField] private float groundRadius;
     [SerializeField] private LayerMask groundLayer;
-    [SerializeField] private Color groundedColor = Color.green;
-    [SerializeField] private Color notGroundedColor = Color.red;
+    [SerializeField] private Color detectedColor = Color.green;
+    [SerializeField] private Color notDetectedColor = Color.red;
+
+    [Header("Wall Collision Check")]
+    [SerializeField] private Transform wallCheck;
+    [SerializeField] private float wallCheckRadius;
+
 
     private float horizontalDirection;
     private bool isFacingRight = true;
@@ -24,6 +30,8 @@ public class PlayerController : MonoBehaviour
     private bool isGrounded;
     private bool canJump;
     private int currentJumpAmount;
+    private bool isWallDetected;
+    private bool isWallSliding;
 
 
     private void Start()
@@ -40,6 +48,7 @@ public class PlayerController : MonoBehaviour
         CheckInput();
         CheckMovementDirection();
         CheckIfCanJump();
+        CheckIfWallSliding();
         AnimationController();
     }
 
@@ -50,6 +59,7 @@ public class PlayerController : MonoBehaviour
         CheckSurroundings();
     }
 
+
     private void CheckInput()
     {
         horizontalDirection = Input.GetAxisRaw("Horizontal");
@@ -58,45 +68,46 @@ public class PlayerController : MonoBehaviour
         {
             Jump();
         }
+        if (Input.GetKeyUp(KeyCode.Space))
+        {
+            CancelJump();
+        }
     }
+
+    
 
     private void CheckSurroundings()
     {
         isGrounded = Physics2D.OverlapCircle(groundCheck.position, groundRadius, groundLayer);
+        isWallDetected = Physics2D.Raycast(wallCheck.position, transform.right, wallCheckRadius, groundLayer);
     }
 
-    private void CheckIfCanJump()
-    {
-        if (isGrounded && rb.velocity.y < 0.01f)
-        {
-            currentJumpAmount = maxJumpAmount;
-        }
-        
-        if(currentJumpAmount <= 0)
-        {
-            canJump = false;
-        }
-        else
-        {
-            canJump = true;
-        }
-
-    }
 
     private void AnimationController()
     {
         anim.SetBool("isWalking", isWalking);
         anim.SetBool("isGrounded", isGrounded);
+        anim.SetBool("isWallSliding", isWallSliding);
         anim.SetFloat("yVelocity", rb.velocity.y);
     }
 
+    #region Movement & Jump
     private void HandleMovement()
     {
+
+        if (isWallSliding)
+        {
+            rb.velocity = new Vector2(0, rb.velocity.y * wallSlideSpeedDivider);
+        }
+
+
         rb.velocity = new Vector2(horizontalDirection * movementSpeed, rb.velocity.y);
+
     }
 
     private void CheckMovementDirection()
     {
+
         if (isFacingRight && horizontalDirection < 0)
         {
             Flip();
@@ -106,14 +117,27 @@ public class PlayerController : MonoBehaviour
             Flip();
         }
 
-        if (Mathf.Abs(rb.velocity.x) > 0)
+        isWalking = Mathf.Abs(horizontalDirection) > 0;
+    }
+
+    private void Flip()
+    {
+        if (isWallSliding)
+            return;
+
+        isFacingRight = !isFacingRight;
+        transform.Rotate(0f, 180f, 0f);
+    }
+
+    private void CheckIfCanJump()
+    {
+        if (isGrounded && rb.velocity.y < 0.01f)
         {
-            isWalking = true;
+            currentJumpAmount = maxJumpAmount;
         }
-        else
-        {
-            isWalking = false;
-        }
+
+        canJump = currentJumpAmount > 0;
+
     }
 
     private void Jump()
@@ -121,27 +145,54 @@ public class PlayerController : MonoBehaviour
         if (canJump)
         {
             rb.velocity = new Vector2(rb.velocity.x, jumpForce);
-            currentJumpAmount--;  
+            currentJumpAmount--;
         }
     }
 
-    private void Flip()
+    private void CancelJump()
     {
-        isFacingRight = !isFacingRight;
-        transform.Rotate(0f, 180f, 0f);
+        rb.velocity = new Vector2(rb.velocity.x, rb.velocity.y * variableJumpDivider);
     }
 
+    #endregion
+
+    private void CheckIfWallSliding()
+    {
+        isWallSliding = isWallDetected && !isGrounded && rb.velocity.y < 0.01f;
+    }
+
+    #region Gizmos Drawings
     private void OnDrawGizmos()
+    {
+        //GroundCheckColorChange();
+        //WallCheckColorChange();
+
+        Gizmos.DrawWireSphere(groundCheck.position, groundRadius);
+        Gizmos.DrawLine(wallCheck.position, new Vector2(wallCheck.position.x + (horizontalDirection * wallCheckRadius), wallCheck.position.y));
+    }
+
+    private void GroundCheckColorChange()
     {
         if (isGrounded)
         {
-            Gizmos.color = groundedColor;
+            Gizmos.color = detectedColor;
         }
         else
         {
-            Gizmos.color = notGroundedColor;
+            Gizmos.color = notDetectedColor;
         }
-
-        Gizmos.DrawWireSphere(groundCheck.position, groundRadius);
     }
+
+    private void WallCheckColorChange()
+    {
+        if (isWallDetected)
+        {
+            Gizmos.color = detectedColor;
+        }
+        else
+        {
+            Gizmos.color = notDetectedColor;
+        }
+    }
+    #endregion
 }
