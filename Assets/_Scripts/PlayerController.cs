@@ -12,6 +12,7 @@ public class PlayerController : MonoBehaviour
     [SerializeField] private float wallSlideSpeedDivider = 0.1f;
     [SerializeField] private float variableJumpDivider = 0.5f;
     [SerializeField] private float wallSlideCancelForce = 2f;
+    [SerializeField] private float airDragMultiplier = 1f;
 
     [Header("Ground Collision Check")]
     [SerializeField] private Transform groundCheck;
@@ -26,9 +27,8 @@ public class PlayerController : MonoBehaviour
 
     [Header("Wall Jump & Hop Data")]
     [SerializeField] private Vector2 wallJumpDirection;
-    [SerializeField] private Vector2 wallHopDirection;
     [SerializeField] private int wallJumpForce;
-    [SerializeField] private int wallHopForce;
+
 
 
     private float horizontalDirection;
@@ -42,7 +42,7 @@ public class PlayerController : MonoBehaviour
     private int currentJumpAmount;
 
     private bool isWallDetected;
-    private bool isWallSliding;
+    public bool isWallSliding;
     private bool canWallSlide = true;
 
     
@@ -62,7 +62,7 @@ public class PlayerController : MonoBehaviour
     {
         currentJumpAmount = maxJumpAmount;
         wallJumpDirection.Normalize();
-        wallHopDirection.Normalize();
+  
     }
 
 
@@ -123,10 +123,11 @@ public class PlayerController : MonoBehaviour
     private void HandleMovement()
     {
 
-        if (isGrounded)
+        if (!isWallSliding)
         {
             rb.velocity = new Vector2(horizontalDirection * movementSpeed, rb.velocity.y);
         }
+        
         
 
     }
@@ -182,11 +183,7 @@ public class PlayerController : MonoBehaviour
             rb.AddForce(force, ForceMode2D.Impulse);
             
         }
-        else if (isWallSliding && Mathf.Abs(horizontalDirection) == 0)
-        {
-            Vector2 force = new Vector2(wallHopDirection.x * wallHopForce * -facingDirection, wallHopDirection.y * wallHopForce);
-            rb.AddForce(force, ForceMode2D.Impulse);
-        }
+
     }
 
     private void CancelJump()
@@ -212,7 +209,7 @@ public class PlayerController : MonoBehaviour
 
     private void CheckIfCancelWallSlide()
     {
-        if (isWallSliding && Input.GetKey(KeyCode.S))
+        if (isWallSliding && (Input.GetKey(KeyCode.S)))
         {
             canWallSlide = false;
         }
