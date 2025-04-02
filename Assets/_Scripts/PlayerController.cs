@@ -24,7 +24,11 @@ public class PlayerController : MonoBehaviour
     [SerializeField] private Transform wallCheck;
     [SerializeField] private float wallCheckRadius;
 
+    [Header("Wall Jump & Hop Data")]
     [SerializeField] private Vector2 wallJumpDirection;
+    [SerializeField] private Vector2 wallHopDirection;
+    [SerializeField] private int wallJumpForce;
+    [SerializeField] private int wallHopForce;
 
 
     private float horizontalDirection;
@@ -41,7 +45,7 @@ public class PlayerController : MonoBehaviour
     private bool isWallSliding;
     private bool canWallSlide = true;
 
-    private float wallJumpForce;
+    
 
 
 
@@ -58,6 +62,7 @@ public class PlayerController : MonoBehaviour
     {
         currentJumpAmount = maxJumpAmount;
         wallJumpDirection.Normalize();
+        wallHopDirection.Normalize();
     }
 
 
@@ -73,6 +78,7 @@ public class PlayerController : MonoBehaviour
 
     private void FixedUpdate()
     {
+        HandleWallSlide();
         HandleMovement();
         CheckSurroundings();
     }
@@ -91,18 +97,11 @@ public class PlayerController : MonoBehaviour
             CancelJump();
         }
 
-        if(isWallSliding && Input.GetKey(KeyCode.S))
-        {
-            CancelWallSlide();
-        }
-
-        if (isWallSliding && Input.GetKeyUp(KeyCode.S))
-        {
-            canWallSlide = true;
-        }
+        CheckIfCancelWallSlide();
     }
 
     
+
 
     private void CheckSurroundings()
     {
@@ -120,22 +119,19 @@ public class PlayerController : MonoBehaviour
     }
 
     #region Movement & Jump
+
     private void HandleMovement()
     {
 
-        if (isWallSliding && canWallSlide)
+        if (isGrounded)
         {
-            rb.velocity = new Vector2(0, rb.velocity.y * wallSlideSpeedDivider);
+            rb.velocity = new Vector2(horizontalDirection * movementSpeed, rb.velocity.y);
         }
-        else if(isWallSliding && !canWallSlide)
-        {
-            rb.velocity = new Vector2(0, rb.velocity.y * (wallSlideSpeedDivider * 8.5f));
-        }
-
-
-        rb.velocity = new Vector2(horizontalDirection * movementSpeed, rb.velocity.y);
+        
 
     }
+
+    
 
     private void CheckMovementDirection()
     {
@@ -169,7 +165,7 @@ public class PlayerController : MonoBehaviour
             currentJumpAmount = maxJumpAmount;
         }
 
-        canJump = currentJumpAmount > 0;
+        canJump = currentJumpAmount > 0 && !isWallSliding;
 
     }
 
@@ -180,6 +176,17 @@ public class PlayerController : MonoBehaviour
             rb.velocity = new Vector2(rb.velocity.x, jumpForce);
             currentJumpAmount--;
         }
+        else if (isWallSliding && Mathf.Abs(horizontalDirection) != 0 && horizontalDirection != facingDirection)
+        {
+            Vector2 force = new Vector2(wallJumpDirection.x * wallJumpForce * -facingDirection, wallJumpDirection.y * wallJumpForce);
+            rb.AddForce(force, ForceMode2D.Impulse);
+            
+        }
+        else if (isWallSliding && Mathf.Abs(horizontalDirection) == 0)
+        {
+            Vector2 force = new Vector2(wallHopDirection.x * wallHopForce * -facingDirection, wallHopDirection.y * wallHopForce);
+            rb.AddForce(force, ForceMode2D.Impulse);
+        }
     }
 
     private void CancelJump()
@@ -189,16 +196,40 @@ public class PlayerController : MonoBehaviour
 
     #endregion
 
+    #region Wall Slide
+    private void HandleWallSlide()
+    {
+        if (isWallSliding && canWallSlide)
+        {
+            rb.velocity = new Vector2(rb.velocity.x, rb.velocity.y * wallSlideSpeedDivider);
+        }
+        else if (isWallSliding && !canWallSlide)
+        {
+            rb.velocity = new Vector2(rb.velocity.x, rb.velocity.y * (wallSlideSpeedDivider * 8.5f));
+        }
+    }
+
+
+    private void CheckIfCancelWallSlide()
+    {
+        if (isWallSliding && Input.GetKey(KeyCode.S))
+        {
+            canWallSlide = false;
+        }
+
+        if ((isWallSliding && Input.GetKeyUp(KeyCode.S) || isGrounded))
+        {
+            canWallSlide = true;
+        }
+    }
+
     private void CheckIfWallSliding()
     {
         isWallSliding = isWallDetected && !isGrounded && rb.velocity.y < 0.01f;
     }
 
-    private void CancelWallSlide()
-    {
-        canWallSlide = false;
-    }
 
+    #endregion
 
 
 
