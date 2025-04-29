@@ -78175,6 +78175,7 @@ MonoBehaviour:
   wallSlideSpeedDivider: 0.1
   variableJumpDivider: 0.5
   wallSlideCancelForce: 2
+  airDragMultiplier: 1
   groundCheck: {fileID: 799180971}
   groundRadius: 0.25
   groundLayer:
@@ -78185,9 +78186,7 @@ MonoBehaviour:
   wallCheck: {fileID: 1969047035}
   wallCheckRadius: 0.55
   wallJumpDirection: {x: 1, y: 2}
-  wallHopDirection: {x: 1, y: 2}
-  wallJumpForce: 20
-  wallHopForce: 5
+  wallJumpForce: 25
 --- !u!95 &1465583067
 Animator:
   serializedVersion: 5

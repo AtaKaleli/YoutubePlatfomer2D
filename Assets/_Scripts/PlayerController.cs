@@ -42,7 +42,7 @@ public class PlayerController : MonoBehaviour
     private int currentJumpAmount;
 
     private bool isWallDetected;
-    public bool isWallSliding;
+    private bool isWallSliding;
     private bool canWallSlide = true;
 
     
@@ -97,7 +97,17 @@ public class PlayerController : MonoBehaviour
             CancelJump();
         }
 
-        CheckIfCancelWallSlide();
+        if (isWallSliding && (Input.GetKey(KeyCode.S)))
+        {
+            CanPlayerWallSlide(false);
+        }
+
+        if ((isWallSliding && Input.GetKeyUp(KeyCode.S) || isGrounded))
+        {
+            CanPlayerWallSlide(true);
+        }
+
+
     }
 
     
@@ -118,7 +128,7 @@ public class PlayerController : MonoBehaviour
         anim.SetFloat("yVelocity", rb.velocity.y);
     }
 
-    #region Movement & Jump
+    #region Movement
 
     private void HandleMovement()
     {
@@ -159,16 +169,9 @@ public class PlayerController : MonoBehaviour
         transform.Rotate(0f, 180f, 0f);
     }
 
-    private void CheckIfCanJump()
-    {
-        if (isGrounded && rb.velocity.y < 0.01f)
-        {
-            currentJumpAmount = maxJumpAmount;
-        }
+    #endregion
 
-        canJump = currentJumpAmount > 0 && !isWallSliding;
-
-    }
+    #region Jump
 
     private void Jump()
     {
@@ -183,6 +186,17 @@ public class PlayerController : MonoBehaviour
             rb.AddForce(force, ForceMode2D.Impulse);
             
         }
+
+    }
+
+    private void CheckIfCanJump()
+    {
+        if (isGrounded && rb.velocity.y < 0.01f)
+        {
+            currentJumpAmount = maxJumpAmount;
+        }
+
+        canJump = currentJumpAmount > 0 && !isWallSliding;
 
     }
 
@@ -207,17 +221,11 @@ public class PlayerController : MonoBehaviour
     }
 
 
-    private void CheckIfCancelWallSlide()
-    {
-        if (isWallSliding && (Input.GetKey(KeyCode.S)))
-        {
-            canWallSlide = false;
-        }
+    
 
-        if ((isWallSliding && Input.GetKeyUp(KeyCode.S) || isGrounded))
-        {
-            canWallSlide = true;
-        }
+    private void CanPlayerWallSlide(bool value)
+    {
+        canWallSlide = value;
     }
 
     private void CheckIfWallSliding()
